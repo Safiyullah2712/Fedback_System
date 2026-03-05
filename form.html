@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        #container{
+            min-height: 100vh;
+            width: 100%;
+            background: #f9fbff;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .f-el{
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .f-el h3 {
+            color: rgb(8, 44, 250);
+            margin-bottom: 30px;
+            font-size: 28px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 15px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .f-el input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 5px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+        
+        .f-el input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: rgb(8, 44, 250);
+            box-shadow: 0 0 8px rgba(8, 44, 250, 0.2);
+            background-color: #f9fbff;
+        }
+        
+        .f-el input[type="range"] {
+            width: 100%;
+            height: 6px;
+            margin: 10px 0;
+            cursor: pointer;
+            accent-color: rgb(8, 44, 250);
+        }
+        
+        #rating {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .star-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        #submit-btn {
+            width: 100%;
+            padding: 14px;
+            margin-top: 25px;
+            background-color: rgb(52, 82, 255);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        #submit-btn:hover {
+            background-color: rgb(8, 44, 250);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(8, 44, 250, 0.3);
+        }
+        
+        #submit-btn:active {
+            transform: translateY(0);
+        }
+        
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div class="f-el">
+            <h3>Feedback Form</h3>
+            <form>
+                <label for="name">Your Name</label>
+                <input type="text" id="name" name="cname" placeholder="Enter your full name" required />
+                
+                <label for="description">Tell Us More</label>
+                <textarea id="description" rows="4" placeholder="Describe your experience or feedback..." required></textarea>
+                
+                <label for="rating">Rate Your Experience</label>
+                <div id="rating">
+                    <button type="button" class="star-btn" data-rating="1"><img src="/bstar.png" height="30px" alt="Star 1"/></button>
+                    <button type="button" class="star-btn" data-rating="2"><img src="/bstar.png" height="30px" alt="Star 2"/></button>
+                    <button type="button" class="star-btn" data-rating="3"><img src="/bstar.png" height="30px" alt="Star 3"/></button>
+                    <button type="button" class="star-btn" data-rating="4"><img src="/bstar.png" height="30px" alt="Star 4"/></button>
+                    <button type="button" class="star-btn" data-rating="5"><img src="/bstar.png" height="30px" alt="Star 5"/></button>
+                </div>
+                <input type="hidden" id="ratingInput" name="rating" value="0">
+                
+                <button id="submit-btn" type="submit">Submit Feedback</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+
+        let selectedRating = 0;
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const form = document.querySelector("form");
+            const ratingInput = document.getElementById("ratingInput");
+            const starButtons = document.querySelectorAll(".star-btn");
+
+            starButtons.forEach(button => {
+                button.addEventListener("click", function (e) {
+                    e.preventDefault();
+
+                    selectedRating = parseInt(this.getAttribute("data-rating"));
+                    ratingInput.value = selectedRating;
+
+                    updateStarDisplay(starButtons);
+                });
+            });
+
+            const editTimestamp = localStorage.getItem("editFeedback");
+
+            if (editTimestamp) {
+
+                const feedbackList = JSON.parse(localStorage.getItem("userFeedbacks")) || [];
+
+                const selectedFeedback = feedbackList.find(
+                    item => item.timestamp === editTimestamp
+                );
+
+                if (selectedFeedback) {
+
+                    document.getElementById("name").value = selectedFeedback.cname;
+                    document.getElementById("description").value = selectedFeedback.feedback;
+
+                    selectedRating = selectedFeedback.rating;
+                    ratingInput.value = selectedRating;
+
+                    updateStarDisplay(starButtons);
+                }
+            }
+
+            form.addEventListener("submit", function (e) {
+
+                e.preventDefault();
+
+                if (!ratingInput || Number(ratingInput.value) < 1) {
+                    alert("Please select a rating before submitting.");
+                    return;
+                }
+
+                const name = form.cname.value.trim();
+                const description = form.description.value.trim();
+                const rating = Number(ratingInput.value);
+
+                let feedbackList = JSON.parse(localStorage.getItem("userFeedbacks")) || [];
+
+                const editTimestamp = localStorage.getItem("editFeedback");
+
+                if (editTimestamp) {
+
+                    feedbackList = feedbackList.map(item => {
+                        if (item.timestamp === editTimestamp) {
+                            return {
+                                ...item,
+                                cname: name,
+                                feedback: description,
+                                rating: rating
+                            };
+                        }
+                        return item;
+                    });
+
+                    localStorage.removeItem("editFeedback");
+
+                    alert("Feedback updated successfully!");
+
+                } else {
+
+                    const feedbackData = {
+                        cname: name,
+                        feedback: description,
+                        rating: rating,
+                        timestamp: new Date().toISOString()
+                    };
+
+                    feedbackList.push(feedbackData);
+
+                    alert("Feedback submitted successfully!");
+                }
+
+                localStorage.setItem("userFeedbacks", JSON.stringify(feedbackList));
+
+                form.reset();
+                selectedRating = 0;
+                ratingInput.value = 0;
+                updateStarDisplay(starButtons);
+
+                window.location.href = "details.html";
+            });
+
+        });
+
+        function updateStarDisplay(starButtons) {
+
+            starButtons.forEach(button => {
+
+                const rating = parseInt(button.getAttribute("data-rating"));
+                const img = button.querySelector("img");
+
+                if (rating <= selectedRating) {
+                    img.src = "../images/gstar.png";
+                } else {
+                    img.src = "../images/bstar.png";
+                }
+            });
+        }
+
+    </script>
+    
+</body>
+</html>
